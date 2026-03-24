@@ -1,0 +1,37 @@
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.PRIVATE_KEY }}
+
+      - name: 변경된 파일만 EC2에 동기화 (rsync)
+        run: |
+          rsync -avz --delete \
+            -e "ssh -o StrictHostKeyChecking=no" \
+            --exclude '.git' \
+            --exclude '.venv' \
+            --exclude '__pycache__' \
+            --exclude '*.pyc' \
+            --exclude '*.pyo' \
+            --exclude 'db/data' \
+            ./ ubuntu@${{ secrets.HOST }}:/home/ubuntu/ex0324_fastapi/
+
+      - name: EC2 접속 및 Docker Compose 재빌드
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.HOST }} << 'EOF'
+            cd /home/ubuntu/ex0324_fastapi
+            mkdir -p db/
+            # Docker 그룹 권한 문제가 있다면 sudo를 붙여야 할 수 있습니다.
+            docker compose down
+            docker compose up -d --build
+          EOF
