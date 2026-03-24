@@ -1,0 +1,420 @@
+{% extends "base.html" %}
+
+
+{% block title %}게시판 - 게시글 목록{% endblock %}
+
+
+{% block extra_style %}
+<style>
+    .table-wrapper {
+        background-color: white;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+
+    th {
+        background-color: #34495e;
+        color: white;
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+    }
+
+
+    td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #ecf0f1;
+    }
+
+
+    tr:hover {
+        background-color: #f9f9f9;
+    }
+
+
+    .title-cell {
+        max-width: 400px;
+    }
+
+
+    .title-link {
+        color: #3498db;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+
+    .title-link:hover {
+        text-decoration: underline;
+    }
+
+
+    .comment-count {
+        background-color: #e74c3c;
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: bold;
+        margin-left: 5px;
+    }
+
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+        margin-top: 30px;
+    }
+
+
+    .pagination a, .pagination span {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #3498db;
+        display: inline-block;
+    }
+
+
+    .pagination a:hover {
+        background-color: #ecf0f1;
+    }
+
+
+    .pagination .current {
+        background-color: #3498db;
+        color: white;
+        border-color: #3498db;
+    }
+
+
+    .pagination .disabled {
+        color: #bdc3c7;
+        cursor: not-allowed;
+    }
+
+
+    .header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+
+    .header-row h2 {
+        font-size: 24px;
+        color: #2c3e50;
+    }
+
+
+    .stats {
+        color: #7f8c8d;
+        font-size: 14px;
+    }
+
+
+
+
+    /* 끌쓰기 화면 */
+    .write-form-container {
+        background-color: white;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+
+    .write-form-title {
+        font-size: 24px;
+        color: #2c3e50;
+        margin-bottom: 30px;
+        font-weight: bold;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 15px;
+    }
+
+
+    .form-row {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+
+    .form-row.full {
+        flex-direction: column;
+    }
+
+
+    .form-group {
+        flex: 1;
+    }
+
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+
+    .form-group input[type="text"],
+    .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        font-family: inherit;
+    }
+
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 300px;
+    }
+
+
+    .form-group input[type="text"]:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #3498db;
+        box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+    }
+
+
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #ecf0f1;
+    }
+
+
+    .info-text {
+        color: #95a5a6;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+
+
+    .required {
+        color: #e74c3c;
+        font-weight: bold;
+    }
+    #write_form {
+        display: none;
+        position: absolute;
+        top: 20px;
+        left: 25%;
+        width: 600px;
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="header-row">
+    <div>
+        <h2>📄 게시글 목록</h2>
+        <p class="stats">전체 <strong>{{ total }}</strong>개의 게시글</p>
+    </div>
+    <!-- current_user가 있을 때 글쓰기 버튼 만들어야 함 -->
+     {% if current_user %}
+     <a href="#" class="btn btn-success" id="write_form_btn">✍️ 새 글 작성</a>
+     {% endif %}
+</div>
+
+
+<div class="table-wrapper">
+    {% if posts %}
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 80px;">번호</th>
+                <th style="width: 50%;">제목</th>
+                <th style="width: 100px;">글쓴이</th>
+                <th style="width: 120px;">작성일</th>
+                <th style="width: 80px;">조회</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for post in posts %}
+            <tr>
+                <td>{{ post.b_idx }}</td>
+                <td class="title-cell">
+                    <a href="javascript:goToDetial('{{ post.b_idx }}')" class="title-link">
+                    {{ post.title }}
+                    </a>
+                </td>
+                <td>{{ post.writer }}</td>
+                <td>{{ post.write_date.strftime('%Y-%m-%d') }}</td>
+                <td style="text-align: center">{{ post.hit }}</td>
+            </tr>    
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+    <!-- 페이지네이션 -->
+    <div class="pagination">
+        {% if current_page > 1 %}
+            <a href="/list?page=1">« 처음</a>
+            <a href="/list?page={{ current_page - 1 }}">‹ 이전</a>
+        {% else %}
+            <span class="disabled">« 처음</span>
+            <span class="disabled">‹ 이전</span>
+        {% endif %}
+
+
+        {% set start_page = ((current_page - 1) // 5) * 5 + 1 %}
+        {% if start_page + 4 < total_pages %}
+            {% set end_page = start_page + 4 %}
+        {% else %}
+            {% set end_page = total_pages %}
+        {% endif %}
+
+
+        {% for page in range(start_page, end_page + 1) %}
+            {% if page == current_page %}
+                <span class="current">{{ page }}</span>
+            {% else %}
+                <a href="/list?page={{ page }}">{{ page }}</a>
+            {% endif %}
+        {% endfor %}
+
+
+        {% if current_page < total_pages %}
+            <a href="/list?page={{ current_page + 1 }}">다음 ›</a>
+            <a href="/list?page={{ total_pages }}">끝 »</a>
+        {% else %}
+            <span class="disabled">다음 ›</span>
+            <span class="disabled">끝 »</span>
+        {% endif %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 40px; color: #7f8c8d;">
+        <p style="font-size: 16px;">작성된 게시글이 없습니다.</p>
+        
+    </div>
+    {% endif %}
+</div>
+
+
+<!-- 글쓰기 화면 -->
+<div class="write-form-container" id="write_form">
+    <h1 class="write-form-title">✍️ 새 글 작성</h1>
+
+
+    <form method="post" action="/write">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="title">제목 <span class="required">*</span></label>
+                <input type="text" id="title" name="title" placeholder="글의 제목을 입력하세요" required maxlength="50">
+                <p class="info-text">최대 50자까지 입력 가능합니다.</p>
+            </div>
+        </div>
+
+
+        <div class="form-row full">
+            <div class="form-group">
+                <label for="content">내용 <span class="required">*</span></label>
+                <textarea id="content" name="content" placeholder="글의 내용을 입력하세요..." required></textarea>
+                <p class="info-text">자세하고 명확한 내용을 작성해주세요.</p>
+            </div>
+        </div>
+
+
+        <div class="form-actions">
+            <button type="button" class="btn btn-success" style="font-size: 16px; padding: 12px 30px;" id="submit_btn">
+                📝 등록
+            </button>
+            <a href="/" class="btn btn-secondary" style="font-size: 16px; padding: 12px 30px;">
+                취소
+            </a>
+        </div>
+    </form>
+</div>
+<script src="https://code.jquery.com/jquery-4.0.0.min.js" integrity="sha256-OaVG6prZf4v69dPg6PhVattBXkcOWQB62pdZ3ORyrao=" crossorigin="anonymous"></script>
+<script>
+    $(function(){
+       // jQuery도입부 (무조건 수행하는 곳이다.)
+       $("#submit_btn").click(function(){
+        // 아이디가 submit_btn인 버튼을 클릭할 때마다 수행하는 곳!
+
+            //사용자가 입력한 제목과 내용을 가져온다.
+            let title = $("#title").val().trim();
+            let content = $("#content").val().trim();
+
+            // 백엔드로 보내기 위해 json형식으로 만들어 두자
+            let data = {
+                title: title,
+                content: content
+            };
+
+            // 백엔드로 보낼 토큰을 localStorage로 부터 얻어낸다.
+            let token = localStorage.getItem("access_token");
+
+            // 백엔드와 통신을 하기 위해 비동기식 통신을 준비하자!
+            $.ajax({
+                url: "/bbs/write", // 요청할 경로(endpoint)
+                type: "POST",  // 요청방식
+                data: JSON.stringify(data), //보내고자하는 파라미터
+                contentType: 'application/json', // 백엔드로 보내는 위의 data가 무슨 형식인지? 지정
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }).done(function(data){
+                console.log(data); // cmd가 1이면 저장성공!
+                if(data.cmd == 1){
+                    alert(data.msg);
+                    location.href="/bbs/list";
+                }
+                    
+            });
+
+       });
+    });
+
+    function writeForm(){
+        $("#write_form").show();
+    }
+
+    function goToDetial(bIdx){
+        // 게시물 상세보기 기능은 로그인이 필요한 서비스이므로 반드시
+        // localStorage에 저장된 access_token을 헤더에 담아서 보내야 한다...
+        let token = localStorage.getItem("access_token");
+
+        $.ajax({
+            url: `/bbs/detail/${bIdx}`,
+            type: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        }).done(function(data){
+            // 백엔드에서 넘겨주는 데이터는 Jinja2템플릿이 주는 html문서가 된다.
+            document.body.innerHTML = data;
+        });
+    }
+</script>
+{% endblock %}

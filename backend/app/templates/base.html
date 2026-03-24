@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BBS - 게시판{% endblock %}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+
+        .header-content h1 {
+            font-size: 28px;
+        }
+
+
+        .nav {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+
+        .nav a, .nav button {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: opacity 0.3s;
+        }
+
+
+        .nav a:hover, .nav button:hover {
+            opacity: 0.8;
+        }
+
+
+        .user-info {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+
+        main {
+            padding: 40px 0;
+            min-height: calc(100vh - 200px);
+        }
+
+
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 40px;
+        }
+
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+
+        .btn:hover {
+            background-color: #2980b9;
+        }
+
+
+        .btn-danger {
+            background-color: #e74c3c;
+        }
+
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+
+        .btn-success {
+            background-color: #27ae60;
+        }
+
+
+        .btn-success:hover {
+            background-color: #229954;
+        }
+
+
+        .btn-secondary {
+            background-color: #95a5a6;
+        }
+
+
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+
+        input[type="text"],
+        input[type="password"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+
+        textarea {
+            resize: vertical;
+            min-height: 200px;
+        }
+
+
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+        }
+
+
+        .error {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+
+        .success {
+            color: #27ae60;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+
+        .form-wrapper {
+            background-color: white;
+            padding: 30px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+
+        {% block extra_style %}{% endblock %}
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <h1><a href="/" style="color: white; text-decoration: none;">📋 답변형 게시판</a></h1>
+                <nav class="nav">
+                    <div id="authNav">
+                        <!-- JavaScript로 동적으로 생성됨 -->
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+
+    <main>
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 BBS Application. All rights reserved.</p>
+        </div>
+    </footer>
+    <form id="writeForm" action="/write" method="get"></form>
+    <script src="https://code.jquery.com/jquery-4.0.0.min.js" integrity="sha256-OaVG6prZf4v69dPg6PhVattBXkcOWQB62pdZ3ORyrao=" crossorigin="anonymous"></script>
+    <script>
+        // JWT 토큰 기반 인증 처리
+        let token = localStorage.getItem("access_token");
+        
+        //document.addEventListener('DOMContentLoaded', function() {
+        $(function(){
+            // jQuery도입부 - 무조건 수행함
+            if(token){
+                // 토큰이 있다면 수행하는 곳이다. (로그인 상태)
+                // JWT 토큰에서 사용자명 추출 : XXXXXX.ASDSDSDSDSDSDSD.ssssssss
+                try{
+                    const payload = JSON.parse(atob(token.split(".")[1]));
+                    let username = payload.username;
+
+                    $("#authNav").html(`
+                        <div class="user-info">👤 ${username}님 환영합니다.</div>
+                        <a href="javascript:writeForm()" class="btn">글쓰기</a>
+                        <button type="button" onclick="logout()" class="btn btn-secondary">
+                            로그아웃
+                        </button>
+                    `);
+
+                    // Authorization헤더에 토큰 설정
+                    setupAuthHeader(token);
+                } catch (e) {
+                    console.error("토큰 파싱 오류 : ", e);
+                    logout();
+                }
+            } else {
+                // 로그아웃 상태
+                $("#authNav").html('<a href="/auth/login" class="btn">로그인</a>');
+            }
+        });
+
+
+        function writeForm111() {
+           
+           
+        }
+       
+        // 모든 fetch 요청에 Authorization 헤더 추가
+        function setupAuthHeader(token) {
+            const originalFetch = window.fetch;
+            window.fetch = function(...args){
+                const [resource, config] = args;
+                const headers = config?.headers || {};
+
+                headers['Authorization'] = `Bearer ${token}`;
+
+                return originalFetch(resource, { ...config, headers});
+            }
+        }
+       
+        // 로그아웃 함수
+        function logout() {
+            // 지금 localStorage에 저장된 access_token을 가져온다.
+            let token = localStorage.getItem("access_token");
+
+            //서버에게 로그아웃을 요청하자!
+            $.ajax({
+                url: "/auth/logout",
+                type: "post",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }).done(function(data){
+                // 서버로부터 정상적으로 처리된 후에 목록창으로 이동함!
+                //let cmd = data.cmd; // 1
+                //let msg = data.msg;
+                alert(data.msg);
+                //if(cmd == 1){
+                    localStorage.removeItem('access_token');
+                    location.href = '/bbs/list';
+                //}
+            });
+        }
+       
+        // 페이지 로드 시 토큰 유효성 확인
+        window.addEventListener('load', function() {
+            const token = localStorage.getItem("access_token");
+            if(token){
+                try {
+                    const payload = JSON.parse(atob(token.split(".")[1]));
+                    const exp = payload.exp; //만료시간 얻기
+                    const now = Math.floor(Date.now()/1000);
+
+                    //만료시간이 1분 이내면 로그아웃
+                    if(exp - now < 60){
+                        alert('토큰이 곧 만료됩니다. 다시 로그인해 주세요');
+                        logout();
+                    }
+                } catch (e) {
+                    config.error("토큰 검증 오류 :", e)
+                    logout();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
